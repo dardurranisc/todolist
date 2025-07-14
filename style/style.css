@@ -64,19 +64,13 @@ header {
   outline:1px solid #000;
 }
 
-#add-list .checkbox {
-  flex-grow:0;
-}
-
 #add-list label {
   flex-grow:1;
   padding: 0 10px;
   overflow: hidden;
 }
 
-#add-list button {
-  flex-grow:0;
-}
+
 #add-list input[type="text"] {
   flex-grow:1;
   padding:10px;
