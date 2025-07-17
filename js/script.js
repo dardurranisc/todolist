@@ -117,7 +117,7 @@ function showFilteredTask(){
 				saveEditTask(this);
 			});
 			editTask.addEventListener('keydown' , function(press){
-				if(press.key === 'Enter'){
+				if(press.key === 'Enter' || press.key === 'Escape'){
 					saveEditTask(editTask);
 				}
 			});
@@ -201,7 +201,7 @@ function selectAll(){
 function deletedAll (){
 	const deletedAllTasks = document.createElement('button');
 	deletedAllTasks.classList.add('delete-all');
-	deletedAllTasks.textContent = "Удалить все активные";
+	deletedAllTasks.textContent = "Удалить выполненные";
 	footer.appendChild(deletedAllTasks);
 
 	deletedAllTasks.addEventListener('click' , function(){
