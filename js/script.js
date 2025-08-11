@@ -111,16 +111,26 @@ function showFilteredTask(){
 			label.style.textDecoration = 'line-through';
 		};
 
-
 		//Изменение label по двойному нажатию
 		label.addEventListener('dblclick' , () => {
 			const editTask = document.createElement('input');
 			editTask.setAttribute('type','text');
 			editTask.value = task.text;
 			li.replaceChild(editTask,label);
+			let isSaveEditTask = false;
 			//Сохранение изменений 
 			function saveEditTask(){
+				if(isSaveEditTask === true){
+					return;
+				}
+				 isSaveEditTask = true;
 				const newText = editTask.value.trim();
+				if(!newText){
+					alert("Введите значение!");
+					 isSaveEditTask = false;
+					editTask.focus();
+					return;
+				}
 
 				if(newText !== task.text){
 					task.text = newText;
@@ -128,6 +138,7 @@ function showFilteredTask(){
 				}
 				label.textContent = task.text;
 				li.replaceChild(label,editTask);
+				isSaveEditTask = false;
 			};
 
 			// Фокус на инпуте
