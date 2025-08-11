@@ -1,126 +1,144 @@
-const input = document.getElementById('btn-input');
-const buttonAdd = document.getElementById('btn-add');
+//Поле "Введите задачу"
+const inputButton = document.getElementById('btn-input');
+//Кнопка "Добавить задачу"
+const addButton = document.getElementById('btn-add');
+//Создание кнопки "Выбрать все"
+const selectAllButton = document.createElement('button');
+//Кнопка "Удалить выполненные"
+const deletedAllButton = document.createElement('button');
+deletedAllButton.classList.add('delete-all');
+deletedAllButton.textContent = "Удалить выполненные";
+//Получение блока с заданиями
+const ul = document.getElementById('add-list');
+//Получение элементов кнопки
+const filterButtons = document.querySelectorAll('.filter__link > a');
+//Получение Футера
+const footer = document.getElementById('footer');
+//Массив заданий
 let tasks = [];
-
-//Вешаем событие при клике на кнопку
-buttonAdd.addEventListener('click' , addNewTask);
-//Вешаем событие при клике на Enter
-input.addEventListener('keydown' , function(press){
-	if(press.key === 'Enter'){
-		addNewTask();
-	}
-});
-// Счетчик
+//Массив отфильтрованных задач
+let filteredTasks = [];
+//Начальное значение задач
 let activeTasksCount = 0;
+//Дефолтный статус ALL
+let filterStatus = 'all';
+//Фильтр для кнопки "Выбрать все"
+let isAllSelected = false;
+// Состояние для функции saveEditTask
+let isSaveEditTask = false;
+//Сохраненные задачи
+const savedTasks = localStorage.getItem('tasks');
+
+
+//Сохранения задач в локальном хранилище 
+function saveTasks(){
+	localStorage.setItem('tasks',JSON.stringify(tasks));
+}
+
+
+//Загрузка задач
+function loadTasks(){
+	if(savedTasks){
+		tasks = JSON.parse(savedTasks);
+		showFilteredTask();
+	}
+}
+
+
+// Счетчик
 function updateCount(){
-	const activeTasks = tasks.filter(function(task){
-		return !task.completed;
-	}).length;
-	document.getElementById('todo-count').textContent = `${activeTasks} : items lefs`;
+	const activeTasks = tasks.filter(task => !task.completed).length;
+	document.getElementById('todo-count').textContent = `${activeTasks} : items left`;
 	activeTasksCount = activeTasks;
 }
 
+
 // Функция добавления задачи
 function addNewTask(){
-	if(input.value.trim() === ""){
+	if(inputButton.value.trim() === ""){
 		alert('Введите задачу');
 		return;
 	}
 	let newTask = {
 		id:Date.now(),
-		text:input.value,
+		text:inputButton.value,
 		completed:false
 	}
 	tasks.unshift(newTask);
-	input.value = '';
+	inputButton.value = '';
 	saveTasks();
 	updateCount();
 	showFilteredTask();
 }
-//Дефолтный статус ALL
-let filterStatus = 'all';
-loadTasks();
-//Отрисовка задач 
-function showFilteredTask(){
-	const ul = document.getElementById('add-list');
-	ul.innerHTML = '';
-	let filteredTasks = [];
+function getFilteredTasks() {
 	if(filterStatus === 'active'){
-		filteredTasks = tasks.filter(function(task){
-			 if (task.completed === false) {
-			    return true;
-			  } else {
-			    return false;
-			  };
-		})
+		filteredTasks = tasks.filter( task => !task.completed === true );
 	}else if(filterStatus === 'completed'){
-		filteredTasks = tasks.filter(function(task){
-			 if (task.completed === true) {
-			    return true;
-			  } else {
-			    return false; 
-			  }
-		})
+		filteredTasks = tasks.filter( task => task.completed === true )
 	}else{
 		filteredTasks = tasks;
 	}
-	filteredTasks.forEach(function(task){
+}
+//Отрисовка задач 
+function showFilteredTask(){
+	let filteredTask = getFilteredTasks();
+	ul.innerHTML = '';
+	filteredTasks.forEach(task => {
 		//Создание тега li
 		const li = document.createElement('li');
 		ul.appendChild(li);
 		
 		//Чек бокс
-		const checkList = document.createElement('input');
-		li.appendChild(checkList);
-		checkList.setAttribute('type','checkbox');
-		checkList.setAttribute('class' , 'checkbox');
-		checkList.checked = task.completed;
+		const checkBox = document.createElement('input');
+		li.appendChild(checkBox);
+		checkBox.setAttribute('type','checkbox');
+		checkBox.setAttribute('class' , 'checkbox');
+		checkBox.checked = task.completed;
 
 		//Изменение состояния чек бокса
-		checkList.addEventListener('change',function(){
-			task.completed = this.checked;
+		checkBox.addEventListener('change',() => {
+			task.completed = checkBox.checked;
 			saveTasks();
 			updateCount();
 			showFilteredTask();
 		});
 
-		//Текст задач 
+		//Текст задач checkBox
 		const label = document.createElement('label');
 		li.appendChild(label);
 		label.innerHTML = task.text;
 		if(task.completed === true) {
 			label.style.textDecoration = 'line-through';
-			updateCount();
 		};
 
+
 		//Изменение label по двойному нажатию
-		label.addEventListener('dblclick' , function(){
+		label.addEventListener('dblclick' , () => {
 			const editTask = document.createElement('input');
 			editTask.setAttribute('type','text');
 			editTask.value = task.text;
 			li.replaceChild(editTask,label);
-
 			//Сохранение изменений 
-			function saveEditTask(inputFocus){
-				const newText = inputFocus.value.trim();
+			function saveEditTask(){
+				const newText = editTask.value.trim();
+
 				if(newText !== task.text){
 					task.text = newText;
 					saveTasks();
 				}
 				label.textContent = task.text;
-				li.replaceChild(label,inputFocus);
+				li.replaceChild(label,editTask);
 			};
 
 			// Фокус на инпуте
 			editTask.focus();
-			editTask.addEventListener('blur' , function(){
-				saveEditTask(this);
-			});
-			editTask.addEventListener('keydown' , function(press){
+			// Сохранение при нажатии Esc и Enter при изменении 
+			editTask.addEventListener('keydown' , press => {
 				if(press.key === 'Enter' || press.key === 'Escape'){
-					saveEditTask(editTask);
+					saveEditTask();
 				}
 			});
+			editTask.addEventListener('blur' , saveEditTask);
 
 		});
 
@@ -129,14 +147,9 @@ function showFilteredTask(){
 		const buttonRemove = document.createElement('button');
 		li.appendChild(buttonRemove);
 		buttonRemove.innerHTML = 'Удалить';
-		buttonRemove.addEventListener('click' , function(){
-			tasks = tasks.filter(function(deleted){
-				if (deleted.id !== task.id) {
-				    return true;
-				  } else {
-				    return false; 
-				  };
-			});
+		buttonRemove.addEventListener('click' , () => {
+			tasks = tasks.filter(deleted => deleted.id !== task.id);
+			console.log(tasks);
 			saveTasks();
 			updateCount();
 			showFilteredTask();
@@ -146,73 +159,32 @@ function showFilteredTask(){
 }
 
 
-//Получение элементов кнопки
-const filterButtons = document.querySelectorAll('.filter__link > a');
-
-filterButtons.forEach(function(button){
-	button.addEventListener('click' , function(){
-		//Удаления класса selected у всех кнопок
-		filterButtons.forEach(function(buttonSelected){
-			buttonSelected.classList.remove('selected');
-		});
-		//Добавление класса selected на кликнутую кнопку
-		this.classList.add('selected');
-		filterStatus = this.id;
-		updateCount();
-		showFilteredTask();
-	});
-})
-
-//Сохранения задач в локальном хранилище 
-function saveTasks(){
-	localStorage.setItem('tasks',JSON.stringify(tasks));
-}
-function loadTasks(){
-	const savedTasks = localStorage.getItem('tasks');
-	if(savedTasks){
-		tasks = JSON.parse(savedTasks);
-		showFilteredTask();
-	}
-}
-
 
 // Создание кнопки "Выбрать все"
 function selectAll(){
-	const selectAllTask = document.createElement('button');
-	const footer = document.getElementById('footer');
-	footer.appendChild(selectAllTask);
-	selectAllTask.classList.add('select-all');
-	selectAllTask.textContent = "Выбрать все";
+	footer.appendChild(selectAllButton);
+	selectAllButton.classList.add('select-all');
+	selectAllButton.textContent = "Выбрать все";
 
-	let allSelected = false;
+	selectAllButton.addEventListener('click' , () => {
 
-	selectAllTask.addEventListener('click' , function(){
+		isAllSelected = !isAllSelected;
 
-		allSelected = !allSelected;
-
-		tasks.forEach(function(task){
-			task.completed = allSelected;
-		});
-
+		tasks.forEach(task => task.completed = isAllSelected);
+		saveTasks();
 		showFilteredTask();
 	});
 }
+
 //Создание кнопки (Удалить задание с выделенным checkbox)
 function deletedAll (){
-	const deletedAllTasks = document.createElement('button');
-	deletedAllTasks.classList.add('delete-all');
-	deletedAllTasks.textContent = "Удалить выполненные";
-	footer.appendChild(deletedAllTasks);
+	footer.appendChild(deletedAllButton);
 
-	deletedAllTasks.addEventListener('click' , function(){
-		let deletedAllActives = tasks.filter(function(task){
-			return task.completed; 
-		}).length;
+	deletedAllButton.addEventListener('click' ,() => {
+		let deletedAllActives = tasks.filter(task => task.completed).length;
 
 		if(deletedAllActives > 0){
-			tasks = tasks.filter(function(task){
-				return !task.completed;
-			});
+			tasks = tasks.filter(task => !task.completed);
 		};
 		saveTasks();
 		showFilteredTask();
@@ -220,6 +192,31 @@ function deletedAll (){
 
 }
 
+// Кнопки фильтрации
+filterButtons.forEach(button => {
+	button.addEventListener('click' , () => {
+		//Удаления класса selected у всех кнопок
+		filterButtons.forEach( buttonSelected => buttonSelected.classList.remove('selected'));
+		//Добавление класса selected на кликнутую кнопку
+		button.classList.add('selected');
+		filterStatus = button.id;
+		updateCount();
+		showFilteredTask();
+	});
+})
+
+//Вешаем событие при клике на кнопку
+addButton.addEventListener('click' , addNewTask);
+
+//Вешаем событие при клике на Enter
+inputButton.addEventListener('keydown' , press => {
+	if(press.key === 'Enter'){
+		addNewTask();
+	}
+});
+
+
 selectAll();
 deletedAll();
 updateCount();
+loadTasks();
