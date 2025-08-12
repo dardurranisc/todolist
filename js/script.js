@@ -81,7 +81,7 @@ function getFilteredTasks() {
 }
 //Отрисовка задач 
 function showFilteredTask(){
-	let filteredTask = getFilteredTasks();
+	getFilteredTasks();
 	ul.innerHTML = '';
 	filteredTasks.forEach(task => {
 		//Создание тега li
@@ -117,28 +117,21 @@ function showFilteredTask(){
 			editTask.setAttribute('type','text');
 			editTask.value = task.text;
 			li.replaceChild(editTask,label);
-			let isSaveEditTask = false;
 			//Сохранение изменений 
 			function saveEditTask(){
-				if(isSaveEditTask === true){
-					return;
-				}
-				 isSaveEditTask = true;
 				const newText = editTask.value.trim();
 				if(!newText){
-					alert("Введите значение!");
-					 isSaveEditTask = false;
-					editTask.focus();
-					return;
+					tasks = tasks.filter(t => t.id !== task.id);
+					li.remove();
+					saveTasks();
+					updateCount();
 				}
-
 				if(newText !== task.text){
 					task.text = newText;
 					saveTasks();
 				}
 				label.textContent = task.text;
 				li.replaceChild(label,editTask);
-				isSaveEditTask = false;
 			};
 
 			// Фокус на инпуте
