@@ -24,20 +24,17 @@ let activeTasksCount = 0;
 let filterStatus = 'all';
 //Фильтр для кнопки "Выбрать все"
 let isAllSelected = false;
-// Состояние для функции saveEditTask
-let isSaveEditTask = false;
-//Сохраненные задачи
-const savedTasks = localStorage.getItem('tasks');
 
 
 //Сохранения задач в локальном хранилище 
-function saveTasks(){
+const saveTasks = () => {
 	localStorage.setItem('tasks',JSON.stringify(tasks));
 }
 
 
 //Загрузка задач
-function loadTasks(){
+const loadTasks = () => {
+	const savedTasks = localStorage.getItem('tasks');
 	if(savedTasks){
 		tasks = JSON.parse(savedTasks);
 		showFilteredTask();
@@ -46,7 +43,7 @@ function loadTasks(){
 
 
 // Счетчик
-function updateCount(){
+const updateCount = () => {
 	const activeTasks = tasks.filter(task => !task.completed).length;
 	document.getElementById('todo-count').textContent = `${activeTasks} : items left`;
 	activeTasksCount = activeTasks;
@@ -54,7 +51,7 @@ function updateCount(){
 
 
 // Функция добавления задачи
-function addNewTask(){
+const addNewTask = () => {
 	if(inputButton.value.trim() === ""){
 		alert('Введите задачу');
 		return;
@@ -70,17 +67,17 @@ function addNewTask(){
 	updateCount();
 	showFilteredTask();
 }
-function getFilteredTasks() {
+const getFilteredTasks = () => {
 	if(filterStatus === 'active'){
-		filteredTasks = tasks.filter( task => !task.completed === true );
+		filteredTasks = tasks.filter( task => !task.completed);
 	}else if(filterStatus === 'completed'){
-		filteredTasks = tasks.filter( task => task.completed === true )
+		filteredTasks = tasks.filter( task => task.completed)
 	}else{
 		filteredTasks = tasks;
 	}
 }
 //Отрисовка задач 
-function showFilteredTask(){
+const showFilteredTask = () =>{
 	getFilteredTasks();
 	ul.innerHTML = '';
 	filteredTasks.forEach(task => {
@@ -107,19 +104,19 @@ function showFilteredTask(){
 		const label = document.createElement('label');
 		li.appendChild(label);
 		label.innerHTML = task.text;
-		if(task.completed === true) {
+		if(task.completed) {
 			label.style.textDecoration = 'line-through';
 		};
 
 		//Изменение label по двойному нажатию
 		label.addEventListener('dblclick' , () => {
-			const editTask = document.createElement('input');
-			editTask.setAttribute('type','text');
-			editTask.value = task.text;
-			li.replaceChild(editTask,label);
+			const editInput = document.createElement('input');
+			editInput.setAttribute('type','text');
+			editInput.value = task.text;
+			li.replaceChild(editInput,label);
 			//Сохранение изменений 
-			function saveEditTask(){
-				const newText = editTask.value.trim();
+			const saveEditTask = () => {
+				const newText = editInput.value.trim();
 				if(!newText){
 					tasks = tasks.filter(t => t.id !== task.id);
 					li.remove();
@@ -131,18 +128,18 @@ function showFilteredTask(){
 					saveTasks();
 				}
 				label.textContent = task.text;
-				li.replaceChild(label,editTask);
+				li.replaceChild(label,editInput);
 			};
 
 			// Фокус на инпуте
-			editTask.focus();
+			editInput.focus();
 			// Сохранение при нажатии Esc и Enter при изменении 
-			editTask.addEventListener('keydown' , press => {
+			editInput.addEventListener('keydown' , press => {
 				if(press.key === 'Enter' || press.key === 'Escape'){
 					saveEditTask();
 				}
 			});
-			editTask.addEventListener('blur' , saveEditTask);
+			editInput.addEventListener('blur' , saveEditTask);
 
 		});
 
@@ -153,7 +150,6 @@ function showFilteredTask(){
 		buttonRemove.innerHTML = 'Удалить';
 		buttonRemove.addEventListener('click' , () => {
 			tasks = tasks.filter(deleted => deleted.id !== task.id);
-			console.log(tasks);
 			saveTasks();
 			updateCount();
 			showFilteredTask();
@@ -165,7 +161,7 @@ function showFilteredTask(){
 
 
 // Создание кнопки "Выбрать все"
-function selectAll(){
+const selectAll = () => {
 	footer.appendChild(selectAllButton);
 	selectAllButton.classList.add('select-all');
 	selectAllButton.textContent = "Выбрать все";
@@ -181,7 +177,7 @@ function selectAll(){
 }
 
 //Создание кнопки (Удалить задание с выделенным checkbox)
-function deletedAll (){
+const deletedAll = () =>{
 	footer.appendChild(deletedAllButton);
 
 	deletedAllButton.addEventListener('click' ,() => {
@@ -222,5 +218,4 @@ inputButton.addEventListener('keydown' , press => {
 
 selectAll();
 deletedAll();
-updateCount();
 loadTasks();
